@@ -1,4 +1,4 @@
-import React, { FC } from 'react'
+import React, { FC, useCallback, useState } from 'react'
 import styled from 'styled-components/macro'
 
 type TabsProps = {
@@ -12,7 +12,7 @@ type TabsProps = {
   orientation?: 'horizontal' | 'vertical'
 }
 
-const Tabs: FC<TabsProps> = ({
+export const Tabs: FC<TabsProps> = ({
   tabs = [],
   selectedTab = 0,
   onClick,
@@ -58,6 +58,14 @@ const Tabs: FC<TabsProps> = ({
   )
 }
 export default Tabs
+
+export function useTabs(defaultTabId: number) {
+  const [selectedTab, setSelectedTab] = useState(defaultTabId)
+
+  const changeTab = useCallback((tabId) => setSelectedTab(tabId), [])
+
+  return { selectedTab, changeTab }
+}
 
 const TabsComponent = styled.div`
   &.vertical {
