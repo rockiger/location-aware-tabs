@@ -18,7 +18,14 @@ export function ParameterExample() {
   return (
     <div>
       <h2>Parameter Example</h2>
-      <Tabs tabs={tabs} type="parameter" />
+      <Tabs
+        tabs={tabs.map(({ id, name }) => ({
+          id,
+          name,
+          Component: () => <div>Param Content {id}</div>,
+        }))}
+        type="parameter"
+      />
     </div>
   )
 }

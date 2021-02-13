@@ -21,18 +21,19 @@ type TabsProps = {
   orientation?: 'horizontal' | 'vertical'
   tabs: ITabs
   type?: 'parameter' | 'query'
+  basePath?: string
 }
 
 export const Tabs: FC<TabsProps> = (props) => {
-  let match = useRouteMatch()
+  const { path } = useRouteMatch()
   if (props.type) {
     return (
       <Switch>
-        <Route path={`${match.path}/:id`}>
-          <RoutedTabs {...props} />
+        <Route path={`${path}/:id`}>
+          <RoutedTabs {...props} basePath={path} />
         </Route>
-        <Route path={`${match.path}/`}>
-          <RoutedTabs {...props} />
+        <Route path={`${path}/`}>
+          <RoutedTabs {...props} basePath={path} />
         </Route>
       </Switch>
     )
@@ -40,22 +41,25 @@ export const Tabs: FC<TabsProps> = (props) => {
     return <RoutedTabs {...props} />
   }
 }
+export default Tabs
+
 export const RoutedTabs: FC<TabsProps> = ({
-  tabs = [],
+  basePath,
   orientation = 'horizontal',
+  tabs = [],
   type,
 }) => {
-  const { selectedTab, changeTab } = useTabs(1, { type })
+  const params = useParams<{ id: string }>()
+  const parameter = parseInt(params.id)
+  const { selectedTab, changeTab } = useTabs(parameter || 1, { type, basePath })
 
   const Panel = tabs && tabs.find((tab) => tab.id === selectedTab)
   const PanelComponent = Panel?.Component || null
   const orientationClass = orientation === 'vertical' ? 'vertical' : ''
 
-  const params = useParams<{ id: string }>()
-  const parameter = parseInt(params.id)
-
-  if (type && parameter !== selectedTab) {
-    return <Redirect to="/param/1" />
+  // eslint-disable-next-line eqeqeq
+  if (type && basePath != undefined && parameter !== selectedTab) {
+    return <Redirect to={`${basePath}/${parameter || 1}`} />
   }
 
   return (
@@ -94,7 +98,6 @@ export const RoutedTabs: FC<TabsProps> = ({
     </TabsComponent>
   )
 }
-export default RoutedTabs
 
 const TabsComponent = styled.div`
   &.vertical {
