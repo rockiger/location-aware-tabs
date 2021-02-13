@@ -1,26 +1,63 @@
-import React, { FC, useCallback, useState } from 'react'
+import React, { FC } from 'react'
 import styled from 'styled-components/macro'
+import {
+  Route,
+  Switch,
+  useRouteMatch,
+  useParams,
+  Redirect,
+} from 'react-router-dom'
+import { useTabs } from './useTabs'
 
-type TabsProps = {
-  tabs: {
-    name: string
-    id: number
-    Component?: FC<{ id: number }>
-  }[]
-  selectedTab: number
-  onClick: (index: number) => void
-  orientation?: 'horizontal' | 'vertical'
+export type ITab = {
+  name: string
+  id: number
+  Component?: FC<{ id: number }>
 }
 
-export const Tabs: FC<TabsProps> = ({
+export type ITabs = ITab[]
+
+type TabsProps = {
+  orientation?: 'horizontal' | 'vertical'
+  tabs: ITabs
+  type?: 'parameter' | 'query'
+}
+
+export const Tabs: FC<TabsProps> = (props) => {
+  let match = useRouteMatch()
+  if (props.type) {
+    return (
+      <Switch>
+        <Route path={`${match.path}/:id`}>
+          <RoutedTabs {...props} />
+        </Route>
+        <Route path={`${match.path}/`}>
+          <RoutedTabs {...props} />
+        </Route>
+      </Switch>
+    )
+  } else {
+    return <RoutedTabs {...props} />
+  }
+}
+export const RoutedTabs: FC<TabsProps> = ({
   tabs = [],
-  selectedTab = 0,
-  onClick,
   orientation = 'horizontal',
+  type,
 }) => {
+  const { selectedTab, changeTab } = useTabs(1, { type })
+
   const Panel = tabs && tabs.find((tab) => tab.id === selectedTab)
   const PanelComponent = Panel?.Component || null
   const orientationClass = orientation === 'vertical' ? 'vertical' : ''
+
+  const params = useParams<{ id: string }>()
+  const parameter = parseInt(params.id)
+
+  if (type && parameter !== selectedTab) {
+    return <Redirect to="/param/1" />
+  }
+
   return (
     <TabsComponent className={orientationClass}>
       <TabsList
@@ -33,7 +70,7 @@ export const Tabs: FC<TabsProps> = ({
             className={`${
               selectedTab === tab.id ? 'active' : ''
             } ${orientationClass}`}
-            onClick={() => onClick(tab.id)}
+            onClick={() => changeTab(tab.id)}
             key={tab.id}
             type="button"
             role="tab"
@@ -57,15 +94,7 @@ export const Tabs: FC<TabsProps> = ({
     </TabsComponent>
   )
 }
-export default Tabs
-
-export function useTabs(defaultTabId: number) {
-  const [selectedTab, setSelectedTab] = useState(defaultTabId)
-
-  const changeTab = useCallback((tabId) => setSelectedTab(tabId), [])
-
-  return { selectedTab, changeTab }
-}
+export default RoutedTabs
 
 const TabsComponent = styled.div`
   &.vertical {

@@ -1,5 +1,5 @@
 import React from 'react'
-import { Tabs, useTabs } from '../components/Tabs'
+import { RoutedTabs } from '../components/Tabs/Tabs'
 
 const tabs = [
   { id: 1, name: 'Tab 1' },
@@ -8,12 +8,10 @@ const tabs = [
 ]
 export default LocalStateExample
 export function LocalStateExample() {
-  const { selectedTab, changeTab } = useTabs(tabs[0].id)
-
   return (
     <>
       <h2>Local State Example</h2>
-      <Tabs onClick={changeTab} selectedTab={selectedTab} tabs={tabs} />
+      <RoutedTabs tabs={tabs} />
     </>
   )
 }
