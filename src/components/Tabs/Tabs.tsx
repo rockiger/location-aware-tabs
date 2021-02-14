@@ -11,19 +11,46 @@ import {
 import { useTabs } from './useTabs'
 
 export type ITab = {
+  /**
+   * Name of the tab
+   */
   name: string
   id: number
+  /**
+   * The component to render in the tab panel.
+   */
   Component?: FC<{ id: number }>
 }
 
 export type ITabs = ITab[]
 
 type TabsProps = {
+  /**
+   * The part of the path before our parameter. Only need if
+   * parameter decides current tab.
+   */
   basePath?: string
+  /**
+   * Orientation of the tabs
+   */
   orientation?: 'horizontal' | 'vertical'
+  /**
+   * The search attribute for the current tab. Only needed if
+   * search query decides current tabs
+   */
   searchAttributeName?: string
+  /**
+   * The tabs for a single tab navigation.
+   * Needed for parameter or local state tab navigations.
+   */
   tabs?: ITabs
+  /**
+   * The tabs for multiple tab navigation on one page. Needed for search query.
+   */
   tabNavs?: ITabs[]
+  /**
+   * The type of tab navigation
+   */
   type?: 'parameter' | 'query'
 }
 
@@ -61,7 +88,7 @@ export const Tabs: FC<TabsProps> = (props) => {
         </>
       )
     }
-    const searchQuery = compileSearch(props?.tabNavs, search)
+    const searchQuery = compileSearch(props?.tabNavs || [], search)
     return (
       <Redirect to={{ pathname: location.pathname, search: searchQuery }} />
     )
@@ -70,21 +97,6 @@ export const Tabs: FC<TabsProps> = (props) => {
   }
 }
 export default Tabs
-
-function areAllNavsInSearch(navs, search) {
-  const searchParams = new window.URLSearchParams(search)
-  const navNames = navs.map((el, index) => `nav${index + 1}`)
-  const result = navNames.every((el) => searchParams.get(el))
-  return result
-}
-
-function compileSearch(navs, search) {
-  const searchParams = new window.URLSearchParams(search)
-  navs.forEach((tabs, index) =>
-    searchParams.set(`nav${index + 1}`, tabs[0]?.id || 1)
-  )
-  return `?${searchParams.toString()}`
-}
 
 export const RoutedTabs: FC<TabsProps> = ({
   basePath,
@@ -148,6 +160,37 @@ export const RoutedTabs: FC<TabsProps> = ({
   )
 }
 
+/**********
+ * Helper *
+ **********/
+
+/**
+ * Determines if all tab navigations are represented in the
+ * current search query.
+ */
+
+function areAllNavsInSearch(navs: ITabs[], search: string) {
+  const searchParams = new window.URLSearchParams(search)
+  const navNames = navs.map((el, index) => `nav${index + 1}`)
+  const result = navNames.every((el) => searchParams.get(el))
+  return result
+}
+
+/**
+ * Compiles a new query for the given tab navigations and the give
+ * search query.
+ */
+function compileSearch(navs: ITabs[], search: string) {
+  const searchParams = new window.URLSearchParams(search)
+  navs.forEach((tabs, index) =>
+    searchParams.set(`nav${index + 1}`, (tabs[0]?.id || 1).toString())
+  )
+  return `?${searchParams.toString()}`
+}
+
+/**
+ * Choose a default tab for the given parameters.
+ */
 function getDefaultTab(type, parameter, searchAttribute, tabs) {
   if (type === 'parameter') {
     return parameter || tabs[0]?.id || 1
@@ -157,7 +200,12 @@ function getDefaultTab(type, parameter, searchAttribute, tabs) {
   return tabs[0]?.id || 1
 }
 
+/*********************
+ * Styled Components *
+ *********************/
+
 const TabsComponent = styled.div`
+  padding-bottom: 2rem;
   &.vertical {
     display: flex;
     flex-wrap: wrap;
@@ -208,10 +256,15 @@ const Button = styled.button`
   }
 `
 const TabPanel = styled.div`
-  text-align: left;
-  padding: 1rem;
+  align-items: center;
   background-color: #f8f8f8;
   box-shadow: 1px 1px 2px rgb(204 204 204 / 75%);
+  display: flex;
+  font-size: 1.5rem;
+  justify-content: center;
+  min-height: 100px;
+  padding: 1rem;
+  text-align: left;
   &.vertical {
     flex: 1;
   }

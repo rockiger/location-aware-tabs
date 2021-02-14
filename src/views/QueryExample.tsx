@@ -10,7 +10,7 @@ export function QueryExample() {
     ).then((res) => res.json())
   )
 
-  if (isLoading) return <div>'Loading...'</div>
+  if (isLoading) return <h2>'Loading...'</h2>
 
   if (error) return <div>'An error has occurred: ' + error.message</div>
 

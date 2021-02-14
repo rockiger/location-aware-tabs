@@ -1,6 +1,10 @@
 import { useCallback, useState } from 'react'
 import { useHistory } from 'react-router-dom'
 
+/**
+ * React Hook based on useState, that changes the window location
+ * accordingly to the type of the tab navigation and to the current location.
+ */
 export function useTabs(
   defaultTabId = 1,
   options: {
