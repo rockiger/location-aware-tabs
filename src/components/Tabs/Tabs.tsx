@@ -6,6 +6,7 @@ import {
   useRouteMatch,
   useParams,
   Redirect,
+  useLocation,
 } from 'react-router-dom'
 import { useTabs } from './useTabs'
 
@@ -18,24 +19,51 @@ export type ITab = {
 export type ITabs = ITab[]
 
 type TabsProps = {
-  orientation?: 'horizontal' | 'vertical'
-  tabs: ITabs
-  type?: 'parameter' | 'query'
   basePath?: string
+  orientation?: 'horizontal' | 'vertical'
+  searchAttributeName?: string
+  tabs?: ITabs
+  tabNavs?: ITabs[]
+  type?: 'parameter' | 'query'
 }
 
 export const Tabs: FC<TabsProps> = (props) => {
+  const location = useLocation()
+  const { search } = location
   const { path } = useRouteMatch()
-  if (props.type) {
+
+  // TODO throw Errors if wrong prop compinations are supplied
+
+  if (props.type === 'parameter') {
     return (
       <Switch>
         <Route path={`${path}/:id`}>
           <RoutedTabs {...props} basePath={path} />
         </Route>
         <Route path={`${path}/`}>
-          <RoutedTabs {...props} basePath={path} />
+          <Redirect to={`${path}/${props.tabs ? props?.tabs[0]?.id : 1}`} />
         </Route>
       </Switch>
+    )
+  } else if (props.type === 'query') {
+    // open tabs from search if present otherwise create defaults
+    if (props.tabNavs?.length && areAllNavsInSearch(props.tabNavs, search)) {
+      return (
+        <>
+          {props.tabNavs?.map((tabs, index) => (
+            <RoutedTabs
+              key={index}
+              searchAttributeName={`nav${index + 1}`}
+              tabs={tabs}
+              type="query"
+            />
+          ))}
+        </>
+      )
+    }
+    const searchQuery = compileSearch(props?.tabNavs, search)
+    return (
+      <Redirect to={{ pathname: location.pathname, search: searchQuery }} />
     )
   } else {
     return <RoutedTabs {...props} />
@@ -43,24 +71,45 @@ export const Tabs: FC<TabsProps> = (props) => {
 }
 export default Tabs
 
+function areAllNavsInSearch(navs, search) {
+  const searchParams = new window.URLSearchParams(search)
+  const navNames = navs.map((el, index) => `nav${index + 1}`)
+  const result = navNames.every((el) => searchParams.get(el))
+  return result
+}
+
+function compileSearch(navs, search) {
+  const searchParams = new window.URLSearchParams(search)
+  navs.forEach((tabs, index) =>
+    searchParams.set(`nav${index + 1}`, tabs[0]?.id || 1)
+  )
+  return `?${searchParams.toString()}`
+}
+
 export const RoutedTabs: FC<TabsProps> = ({
   basePath,
   orientation = 'horizontal',
+  searchAttributeName = '',
   tabs = [],
   type,
 }) => {
+  const { search } = useLocation()
+  const searchParams = new window.URLSearchParams(search)
+  const searchAttribute = parseInt(searchParams.get(searchAttributeName) || '')
+
   const params = useParams<{ id: string }>()
   const parameter = parseInt(params.id)
-  const { selectedTab, changeTab } = useTabs(parameter || 1, { type, basePath })
+
+  const defaultTab = getDefaultTab(type, parameter, searchAttribute, tabs)
+  const { selectedTab, changeTab } = useTabs(defaultTab, {
+    type,
+    basePath,
+    searchAttributeName,
+  })
 
   const Panel = tabs && tabs.find((tab) => tab.id === selectedTab)
   const PanelComponent = Panel?.Component || null
   const orientationClass = orientation === 'vertical' ? 'vertical' : ''
-
-  // eslint-disable-next-line eqeqeq
-  if (type && basePath != undefined && parameter !== selectedTab) {
-    return <Redirect to={`${basePath}/${parameter || 1}`} />
-  }
 
   return (
     <TabsComponent className={orientationClass}>
@@ -97,6 +146,15 @@ export const RoutedTabs: FC<TabsProps> = ({
       </TabPanel>
     </TabsComponent>
   )
+}
+
+function getDefaultTab(type, parameter, searchAttribute, tabs) {
+  if (type === 'parameter') {
+    return parameter || tabs[0]?.id || 1
+  } else if (type === 'query') {
+    return searchAttribute || tabs[0]?.id || 1
+  }
+  return tabs[0]?.id || 1
 }
 
 const TabsComponent = styled.div`

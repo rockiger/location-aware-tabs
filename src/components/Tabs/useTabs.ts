@@ -3,7 +3,11 @@ import { useHistory } from 'react-router-dom'
 
 export function useTabs(
   defaultTabId = 1,
-  options: { type?: 'parameter' | 'query'; basePath?: string } = {}
+  options: {
+    basePath?: string
+    searchAttributeName?: string
+    type?: 'parameter' | 'query'
+  } = {}
 ) {
   const [selectedTab, setSelectedTab] = useState(defaultTabId)
   const history = useHistory()
@@ -13,6 +17,13 @@ export function useTabs(
       // eslint-disable-next-line eqeqeq
       if (options.type === 'parameter' && options.basePath != undefined) {
         history.push(`${options.basePath}/${tabId}`)
+      }
+      if (options.type === 'query' && options.searchAttributeName) {
+        const pathname = history.location.pathname
+        const searchParams = new window.URLSearchParams(history.location.search)
+        searchParams.set(options.searchAttributeName, tabId)
+        const searchQuery = `?${searchParams.toString()}`
+        history.push({ pathname: pathname, search: searchQuery })
       }
     },
     [history, options]

@@ -36,3 +36,28 @@ describe('useTabs with parameter', () => {
     expect(result.current.selectedTab).toBe(2)
   })
 })
+
+describe('useTabs with query', () => {
+  it('should use tabs', () => {
+    const { result } = renderHook(
+      () => useTabs(1, { type: 'query', searchAttributeName: 'nav1' }),
+      {
+        wrapper: MemoryRouter,
+      }
+    )
+    expect(result.current.selectedTab).toBe(1)
+    expect(typeof result.current.changeTab).toBe('function')
+  })
+
+  it('should change selected tab', () => {
+    const { result } = renderHook(
+      () => useTabs(1, { type: 'query', searchAttributeName: 'nav1' }),
+      {
+        wrapper: MemoryRouter,
+      }
+    )
+    expect(result.current.selectedTab).toBe(1)
+    act(() => result.current.changeTab(2))
+    expect(result.current.selectedTab).toBe(2)
+  })
+})
