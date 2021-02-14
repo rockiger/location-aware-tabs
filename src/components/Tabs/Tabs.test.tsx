@@ -23,9 +23,21 @@ const localTabs = [
   { id: 2, name: 'Tab 2', Component: () => <div>Local Content 2</div> },
   { id: 3, name: 'Tab 3', Component: () => <div>Local Content 3</div> },
 ]
+
 test('local state', () => {
-  render(<Tabs tabs={localTabs} />, { wrapper: MemoryRouter })
+  render(<Tabs tabs={localTabs} />, {
+    wrapper: MemoryRouter,
+  })
   expect(screen.getByText('Local Content 1')).toBeInTheDocument()
+  userEvent.click(screen.getByText('Tab 2'), leftClick)
+  expect(screen.getByText('Local Content 2')).toBeInTheDocument()
+})
+
+test('local state with default tab', () => {
+  render(<Tabs defaultActiveTab={3} tabs={localTabs} />, {
+    wrapper: MemoryRouter,
+  })
+  expect(screen.getByText('Local Content 3')).toBeInTheDocument()
   userEvent.click(screen.getByText('Tab 2'), leftClick)
   expect(screen.getByText('Local Content 2')).toBeInTheDocument()
 })

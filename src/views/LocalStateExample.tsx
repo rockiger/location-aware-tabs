@@ -11,7 +11,7 @@ export function LocalStateExample() {
   return (
     <>
       <h2>Local State Example</h2>
-      <Tabs tabs={tabs} />
+      <Tabs tabs={tabs} defaultActiveTab={2} />
     </>
   )
 }

@@ -31,6 +31,11 @@ type TabsProps = {
    */
   basePath?: string
   /**
+   * The default active tab. Is overriden by window location parameters.
+   * Assumes > 0
+   */
+  defaultActiveTab?: number
+  /**
    * Orientation of the tabs
    */
   orientation?: 'horizontal' | 'vertical'
@@ -80,6 +85,7 @@ export const Tabs: FC<TabsProps> = (props) => {
           {props.tabNavs?.map((tabs, index) => (
             <RoutedTabs
               key={index}
+              defaultActiveTab={props.defaultActiveTab}
               searchAttributeName={`nav${index + 1}`}
               tabs={tabs}
               type="query"
@@ -100,6 +106,7 @@ export default Tabs
 
 export const RoutedTabs: FC<TabsProps> = ({
   basePath,
+  defaultActiveTab,
   orientation = 'horizontal',
   searchAttributeName = '',
   tabs = [],
@@ -112,7 +119,13 @@ export const RoutedTabs: FC<TabsProps> = ({
   const params = useParams<{ id: string }>()
   const parameter = parseInt(params.id)
 
-  const defaultTab = getDefaultTab(type, parameter, searchAttribute, tabs)
+  const defaultTab = getDefaultTab(
+    type,
+    parameter,
+    searchAttribute,
+    tabs,
+    defaultActiveTab
+  )
   const { selectedTab, changeTab } = useTabs(defaultTab, {
     type,
     basePath,
@@ -191,13 +204,19 @@ function compileSearch(navs: ITabs[], search: string) {
 /**
  * Choose a default tab for the given parameters.
  */
-function getDefaultTab(type, parameter, searchAttribute, tabs) {
+function getDefaultTab(
+  type,
+  parameter,
+  searchAttribute,
+  tabs,
+  defaultActiveTab
+) {
   if (type === 'parameter') {
     return parameter || tabs[0]?.id || 1
   } else if (type === 'query') {
     return searchAttribute || tabs[0]?.id || 1
   }
-  return tabs[0]?.id || 1
+  return defaultActiveTab || tabs[0]?.id || 1
 }
 
 /*********************
